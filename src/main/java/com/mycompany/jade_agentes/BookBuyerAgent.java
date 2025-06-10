@@ -3,6 +3,7 @@ package com.mycompany.jade_agentes;
 import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -29,35 +30,49 @@ public class BookBuyerAgent extends Agent {
         // Printout a welcome message
         System.out.println("Buyer-agent " + getAID().getName() + " is ready.");
         
-        // Get names of seller agents as arguments
-        Object[] args = getArguments();
-        if (args != null && args.length > 0) {
-            for (int i = 0; i < args.length; ++i) {
-                AID seller = new AID((String) args[i], AID.ISLOCALNAME);
-                sellerAgents.addElement(seller);
-            }
-        }
-        
-        // Update the list of seller agents every minute
-        addBehaviour(new TickerBehaviour(this, 60000) {
-            protected void onTick() {
-                // Update the list of seller agents
-                DFAgentDescription template = new DFAgentDescription();
-                ServiceDescription sd = new ServiceDescription();
-                sd.setType("Book-selling");
-                template.addServices(sd);
-                try {
-                    DFAgentDescription[] result = DFService.search(myAgent,
-                            template);
-                    sellerAgents.clear();
-                    for (int i = 0; i < result.length; ++i) {
-                        sellerAgents.addElement(result[i].getName());
-                    }
-                } catch (FIPAException fe) {
-                    fe.printStackTrace();
+        // Behaviour para saludar al agente Seller
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage msg = receive();
+                if (msg != null) {
+                    System.out.println(getLocalName() + " recibió: " + msg.getContent());
+
+                    // Responder al AgenteB
+                    ACLMessage newMsg = new ACLMessage(ACLMessage.INFORM);
+                    newMsg.addReceiver(new AID("AgenteBookSeller", AID.ISLOCALNAME));
+                    newMsg.setContent("AgenteA recibió: \"" + msg.getContent() + "\" y responde a AgenteB.");
+                    send(newMsg);
+
+                    System.out.println(getLocalName() + " envió un mensaje a AgenteB.");
+                } else {
+                    block();
                 }
             }
         });
+        
+        
+        
+        // Update the list of seller agents every minute
+//        addBehaviour(new TickerBehaviour(this, 60000) {
+//            protected void onTick() {
+//                // Update the list of seller agents
+//                DFAgentDescription template = new DFAgentDescription();
+//                ServiceDescription sd = new ServiceDescription();
+//                sd.setType("Book-selling");
+//                template.addServices(sd);
+//                try {
+//                    DFAgentDescription[] result = DFService.search(myAgent,
+//                            template);
+//                    sellerAgents.clear();
+//                    for (int i = 0; i < result.length; ++i) {
+//                        sellerAgents.addElement(result[i].getName());
+//                    }
+//                } catch (FIPAException fe) {
+//                    fe.printStackTrace();
+//                }
+//            }
+//        });
 //        // Show the GUI to interact with the user
 //        myGui = new BookBuyerGuiImpl();
 //        myGui.setAgent(this);

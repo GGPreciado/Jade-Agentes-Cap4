@@ -10,6 +10,7 @@ import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
 import java.util.*;
 
 public class BookSellerAgent extends Agent {
@@ -25,6 +26,20 @@ public class BookSellerAgent extends Agent {
     protected void setup() {
         // Printout a welcome message
         System.out.println("Seller-agent " + getAID().getName() + " is ready.");
+        
+        // Behaviour para recibir el mensaje del agente Buyer
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage msg = receive();
+                if (msg != null) {
+                    System.out.println(getLocalName() + " recibió: " + msg.getContent());
+                } else {
+                    block();
+                }
+            }
+        });
+        
         
         // Register the book-selling service in the yellow pages
         DFAgentDescription dfd = new DFAgentDescription();
